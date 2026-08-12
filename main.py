@@ -102,12 +102,12 @@ async def owner_control_handler(event):
     text = event.raw_text.strip().lower()
     chat_id = event.chat_id
 
-    if text == ".pause":
+    if text == ".stop":
         paused_chats.add(chat_id)
         await event.delete()
         print(f"[Override] AI Paused for Chat ID: {chat_id}")
         
-    elif text == ".resume":
+    elif text == ".start":
         paused_chats.discard(chat_id)
         await event.delete()
         print(f"[Override] AI Resumed for Chat ID: {chat_id}")
