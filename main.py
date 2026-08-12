@@ -26,7 +26,7 @@ if not all([API_ID, API_HASH, SESSION_STRING, OPENROUTER_API_KEY]):
 PROMPT_FILE = "system_prompt.txt"
 
 # အကယ်၍ ဖိုင်မရှိသေးပါက အသုံးပြုမည့် အရေးပေါ် (Fallback) Prompt
-DEFAULT_PROMPT = """Anda harus bertugas sebagai Customer Service (Layanan Pelanggan) di akun Telegram milik Admin Hope Myanmar. Anda harus dapat menjawab pertanyaan dari pelanggan dengan sopan. Anda harus merujuk pada informasi di dalam knowledge.pdf yang diberikan kepada Anda dan menjawab pertanyaan pelanggan dengan akurat. Anda harus mematuhi aturan yang ditetapkan untuk Anda dengan sangat ketat."""
+DEFAULT_PROMPT = """Kamu harus bertugas sebagai Customer Service (Layanan Pelanggan) di akun Telegram milik Admin Flows GPT. Kamu harus dapat menjawab pertanyaan yang diajukan oleh pelanggan dengan sopan. Kamu harus dapat menjawab pertanyaan pelanggan secara akurat dengan merujuk pada informasi yang ada di dalam knowledge.pdf yang diberikan kepadamu. Kamu harus mematuhi aturan yang ditetapkan untukmu dengan sangat ketat."""
 
 # ဖိုင်ရှိ/မရှိ စစ်ဆေးပြီး ဖတ်ယူခြင်း (မြန်မာစာအတွက် utf-8 အသုံးပြုထားသည်)
 if os.path.exists(PROMPT_FILE):
