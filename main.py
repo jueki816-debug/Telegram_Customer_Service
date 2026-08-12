@@ -20,6 +20,27 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 if not all([API_ID, API_HASH, SESSION_STRING, OPENROUTER_API_KEY]):
     raise ValueError("[Error] .env ဖိုင်ထဲတွင် လိုအပ်သော Keys များ ထည့်သွင်းရန် ကျန်ရှိနေပါသည်။")
 
+# -----------------------------------------------------------
+# [NEW ARCHITECTURE] သီးသန့်ခွဲထုတ်ထားသော System Prompt ကို ဖတ်ရှုခြင်း
+# -----------------------------------------------------------
+PROMPT_FILE = "system_prompt.txt"
+
+# အကယ်၍ ဖိုင်မရှိသေးပါက အသုံးပြုမည့် အရေးပေါ် (Fallback) Prompt
+DEFAULT_PROMPT = """သင်သည် လူသားဆန်ပြီး ယဉ်ကျေးပျူငှာသော Customer Service AI ကိုယ်စားလှယ်ဖြစ်သည်။ အောက်ပါ အချက်အလက် (Context) ကို အခြေခံ၍ Customer ၏ မေးခွန်းများကို မြန်မာလို အကောင်းဆုံး ဖြေကြားပေးပါ။
+စည်းကမ်းချက်များ:
+၁။ အချက်အလက်ထဲတွင် မပါသော အရာများကို ကိုယ်တိုင် ဖန်တီးမဖြေပါနှင့်။
+၂။ ယဉ်ကျေးပြီး ရင်းနှီးသော အသုံးအနှုန်းကို အသုံးပြုပါ။"""
+
+# ဖိုင်ရှိ/မရှိ စစ်ဆေးပြီး ဖတ်ယူခြင်း (မြန်မာစာအတွက် utf-8 အသုံးပြုထားသည်)
+if os.path.exists(PROMPT_FILE):
+    with open(PROMPT_FILE, "r", encoding="utf-8") as f:
+        base_system_prompt = f.read().strip()
+    print(f"[Success] System Prompt ကို '{PROMPT_FILE}' မှ အောင်မြင်စွာ ဖတ်ရှုပြီးပါပြီ။")
+else:
+    base_system_prompt = DEFAULT_PROMPT
+    print(f"[Warning] '{PROMPT_FILE}' မတွေ့ပါ။ Default Prompt ဖြင့် ဆက်လက်အလုပ်လုပ်ပါမည်။")
+
+
 # AI Client နှင့် RAG Engine စတင်ခြင်း
 ai_client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
@@ -89,22 +110,15 @@ async def ai_reply_handler(event):
         return
 
     try:
+        # RAG ဖြင့် ကိုးကားချက် ရှာဖွေခြင်း
         context = rag.retrieve(user_message)
         history = chat_history.get(chat_id, "")
         
-        system_prompt = f"""
-        သင်သည် လူသားဆန်ပြီး ယဉ်ကျေးပျူငှာသော Customer Service AI ကိုယ်စားလှယ်ဖြစ်သည်။ အောက်ပါ အချက်အလက် (Context) ကို အခြေခံ၍ Customer ၏ မေးခွန်းများကို မြန်မာလို အကောင်းဆုံး ဖြေကြားပေးပါ။
-        
-        [ကိုးကားရန် အချက်အလက်များ]
-        {context}
-        
-        စည်းကမ်းချက်များ:
-        ၁။ အချက်အလက်ထဲတွင် မပါသော အရာများကို ကိုယ်တိုင် ဖန်တီးမဖြေပါနှင့်။
-        ၂။ ယဉ်ကျေးပြီး ရင်းနှီးသော အသုံးအနှုန်းကို အသုံးပြုပါ။
-        """
+        # [DYNAMIC PROMPT ASSEMBLY] သီးသန့် Prompt နှင့် RAG ကိုးကားချက်ကို ပေါင်းစပ်ခြင်း
+        final_system_prompt = f"{base_system_prompt}\n\n[ကိုးကားရန် အချက်အလက်များ]\n{context}"
 
         messages = [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": final_system_prompt},
             {"role": "user", "content": f"ယခင်စကားပြောမှတ်တမ်းများ:\n{history}\n\nယခုမေးခွန်း: {user_message}"}
         ]
 
@@ -137,5 +151,4 @@ async def main():
     )
 
 if __name__ == "__main__":
-    # Python 3.14+ အတွက် ကျွန်တော်တို့ ကိုယ်တိုင်ဖန်တီးထားသော loop ဖြင့် Run ခြင်း
     loop.run_until_complete(main())
